@@ -6,9 +6,10 @@ Simple pipeline: (ViPE OR COLMAP) → GSplat
 import argparse
 import subprocess
 import sys
+import os
 from pathlib import Path
 
-def run_cmd(cmd, conda_env=None):
+def run_cmd(cmd, conda_env=None, env_vars=None):
     """Execute command in conda environment"""
     if conda_env:
         cmd = ["conda", "run", "-n", conda_env] + cmd
@@ -17,7 +18,11 @@ def run_cmd(cmd, conda_env=None):
     print(f"Running: {' '.join(cmd)}")
     print(f"{'='*80}\n")
     
-    result = subprocess.run(cmd, check=False)
+    env = os.environ.copy()
+    if env_vars:
+        env.update(env_vars)
+    
+    result = subprocess.run(cmd, check=False, env=env)
     if result.returncode != 0:
         print(f"\n✗ Command failed with code {result.returncode}")
         sys.exit(1)
@@ -131,7 +136,7 @@ def main():
         "--result_dir", str(gsplat_output),
         "--data_factor", str(args.gsplat_factor),
         "--save_ply"
-    ], conda_env="gsplat")
+    ], conda_env="gsplat", env_vars={"CUDA_VISIBLE_DEVICES": "0"})
     
     print(f"\n{'='*80}")
     print("✓ PIPELINE COMPLETED!")

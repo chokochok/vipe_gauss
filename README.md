@@ -75,7 +75,7 @@ output_dir/
 
 ```bash
 # Quick test (scale 8)
-python pipeline.py data/input/test_images output/test1 --scale 2
+python pipeline.py data/input/test_images output/test1
 
 # ViPE, standard quality
 python pipeline.py ~/data/zavod70 output/vipe_run --mode vipe --scale 4
