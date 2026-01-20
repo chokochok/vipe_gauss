@@ -1,0 +1,202 @@
+# install conda to kaggle
+mkdir -p ~/miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+rm ~/miniconda3/miniconda.sh
+
+source ~/miniconda3/bin/activate
+
+conda init --all
+
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+
+
+
+# create folders
+mkdir -p vipe_test_task/{data/zavod70/images,external,output,my_scripts}
+
+
+
+# fix fonts
+sudo apt install -y fonts-dejavu-core
+fc-cache -fv
+
+# clone vipe and create env
+cd /kaggle/working/vipe_test_task/external
+rm -rf vipe
+git clone https://github.com/nv-tlabs/vipe
+
+cd vipe
+conda env create -f envs/base.yml
+conda activate vipe
+
+pip install -r envs/requirements.txt --extra-index-url https://download.pytorch.org/whl/cu128
+pip install --no-build-isolation -e .
+
+
+
+
+
+# process zavod70 data
+python /kaggle/working/vipe_test_task/my_scripts/prepare_dataset.py \
+    --input /kaggle/working/vipe_test_task/data/input_images/zavod70 \
+    --output /kaggle/working/vipe_test_task/data/processed/zavod70 \
+    --scales 1 2 4 8 \
+    --enforce-even
+
+
+python /kaggle/working/vipe_test_task/my_scripts/prepare_dataset.py \
+    --input /path/to/video.mp4 \
+    --output /kaggle/working/vipe_test_task/data/processed \
+    --scales 1 2 4 8 \
+    --frame-skip 2
+
+
+
+
+ffmpeg -framerate 30 -i /kaggle/working/vipe_test_task/data/processed/zavod70/images_4/%05d.jpg \
+    -c:v libx264 -pix_fmt yuv420p \
+    /kaggle/working/vipe_test_task/data/processed/zavod70/video_images_4.mp4
+
+
+# 4 video
+python /kaggle/working/vipe_test_task/external/vipe/run.py \
+    pipeline=default \
+    streams=raw_mp4_stream \
+    streams.base_path=/kaggle/working/vipe_test_task/data/processed/zavod70/video_images_4.mp4 \
+    pipeline.output.save_artifacts=true \
+    pipeline.output.save_slam_map=true \
+    pipeline.output.save_viz=true \
+    pipeline.output.path=/kaggle/working/vipe_test_task/output/zavod_4_video/
+
+
+python /kaggle/working/vipe_test_task/my_scripts/vipe_slam_to_colmap.py \
+    /kaggle/working/vipe_test_task/output/zavod_4_video \
+    --images /kaggle/working/vipe_test_task/data/processed/zavod70/video_images_4 \
+    --output /kaggle/working/vipe_test_task/output/zavod_4_video_colmap \
+    --point-subsample 1
+
+
+
+# 4 default
+python /kaggle/working/vipe_test_task/external/vipe/run.py \
+    pipeline=default \
+    streams=frame_dir_stream \
+    streams.base_path=/kaggle/working/vipe_test_task/data/processed/zavod70/images_4 \
+    pipeline.output.save_artifacts=true \
+    pipeline.output.save_slam_map=true \
+    pipeline.output.save_viz=true \
+    pipeline.output.path=/kaggle/working/vipe_test_task/output/zavod_4/
+
+
+python /kaggle/working/vipe_test_task/my_scripts/vipe_slam_to_colmap.py \
+    /kaggle/working/vipe_test_task/output/zavod_4 \
+    --images /kaggle/working/vipe_test_task/data/processed/zavod70/images_4 \
+    --output /kaggle/working/vipe_test_task/output/zavod_4_colmap \
+    --point-subsample 1
+
+
+# 2 default
+python /kaggle/working/vipe_test_task/external/vipe/run.py \
+    pipeline=default \
+    streams=frame_dir_stream \
+    streams.base_path=/kaggle/working/vipe_test_task/data/processed/zavod70/images_2 \
+    pipeline.output.save_artifacts=true \
+    pipeline.output.save_slam_map=true \
+    pipeline.output.save_viz=true \
+    pipeline.output.path=/kaggle/working/vipe_test_task/output/zavod_2/
+
+
+python /kaggle/working/vipe_test_task/my_scripts/vipe_slam_to_colmap.py \
+    /kaggle/working/vipe_test_task/output/zavod_2 \
+    --images /kaggle/working/vipe_test_task/data/processed/zavod70/images_2 \
+    --output /kaggle/working/vipe_test_task/output/zavod_2_colmap \
+    --point-subsample 1
+
+
+
+
+
+
+
+conda create -n colmap python=3.10 -y
+conda activate colmap
+
+conda install -c "nvidia/label/cuda-12.1.0" cuda-toolkit -y
+pip install Pillow tqdm pycolmap-cuda12
+
+mkdir /kaggle/working/vipe_test_task/output/zavod_1920_1_pycolmap/images
+cp /kaggle/working/vipe_test_task/output/zavod_1920_1_colmap/input_video_1920p/images/* /kaggle/working/vipe_test_task/output/zavod_1920_1_pycolmap/images/
+python /kaggle/working/vipe_test_task/my_scripts/colmap.py \
+    /kaggle/working/vipe_test_task/output/zavod_1920_1_pycolmap \
+    --resize \
+    --matcher sequential
+
+
+
+
+conda create -n gsplat python=3.10 -y
+conda activate gsplat
+
+pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/cu124
+conda install -c nvidia/label/cuda-12.4.0 cuda-toolkit -y
+conda install -c conda-forge gxx_linux-64=11 -y
+
+
+cd /kaggle/working/vipe_test_task/external
+rm -rf gsplat
+git clone https://github.com/nerfstudio-project/gsplat.git
+cd gsplat
+pip install git+https://github.com/nerfstudio-project/gsplat.git --no-build-isolation
+pip install -r examples/requirements.txt --no-build-isolation
+
+
+
+# ЗАПУСК
+CUDA_VISIBLE_DEVICES=0 python /kaggle/working/vipe_test_task/external/gsplat/examples/simple_trainer.py default \
+    --data_dir /kaggle/working/vipe_test_task/output/zavod_1920_1_pycolmap \
+    --result_dir /kaggle/working/vipe_test_task/output/zavod_1920_1_pycolmap_gsplat \
+    --data_factor 4 \
+    --save_ply
+
+CUDA_VISIBLE_DEVICES=1 python /kaggle/working/vipe_test_task/external/gsplat/examples/simple_trainer.py default \
+    --data_dir /kaggle/working/vipe_test_task/output/zavod_1920_1_colmap/input_video_1920p \
+    --result_dir /kaggle/working/vipe_test_task/output/zavod_1920_1_gsplat \
+    --data_factor 4 \
+    --save_ply
+
+
+CUDA_VISIBLE_DEVICES=0 python /kaggle/working/vipe_test_task/external/gsplat/examples/simple_trainer.py default \
+    --data_dir /kaggle/working/vipe_test_task/output/zavod_4_colmap/images_4 \
+    --result_dir /kaggle/working/vipe_test_task/output/zavod_4_colmap_gsplat \
+    --data_factor 1 \
+    --save_ply
+
+
+
+
+zip -r /kaggle/working/vipe_test_task/output.zip /kaggle/working/vipe_test_task/output
+
+
+
+
+
+
+
+
+CUDA_VISIBLE_DEVICES=0 python /kaggle/working/vipe_test_task/external/gsplat/examples/simple_trainer.py default \
+    --data_dir /kaggle/working/vipe_test_task/output/zavod_2_colmap/images_2 \
+    --result_dir /kaggle/working/vipe_test_task/output/zavod_2_colmap_gsplat \
+    --data_factor 1 \
+    --save_ply
+
+
+
+
+CUDA_VISIBLE_DEVICES=0 python /kaggle/working/vipe_test_task/external/gsplat/examples/simple_trainer.py default \
+    --data_dir /kaggle/working/vipe_test_task/output/zavod_2_colmap_2/images_2 \
+    --result_dir /kaggle/working/vipe_test_task/output/zavod_2_colmap_v2_gsplat \
+    --data_factor 1 \
+    --save_ply
