@@ -7,6 +7,11 @@ echo "=========================================="
 echo "Setting up environments for pipeline"
 echo "=========================================="
 
+# Install system dependencies
+echo "Installing system dependencies..."
+sudo apt install -y fonts-dejavu-core
+fc-cache -fv
+
 WORKSPACE=$(pwd)
 EXTERNAL_DIR="$WORKSPACE/external"
 mkdir -p "$EXTERNAL_DIR"

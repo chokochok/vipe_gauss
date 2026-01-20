@@ -99,6 +99,23 @@ Images → ViPE SLAM → COLMAP format → GSplat
 Images → COLMAP reconstruction → GSplat
 ```
 
+## 📹 Results / Demo Videos
+
+### Pure COLMAP Mode
+> Full COLMAP reconstruction → Gaussian Splatting
+
+[![COLMAP Results](https://img.youtube.com/vi/GxzizEA2Eds/0.jpg)](https://www.youtube.com/watch?v=GxzizEA2Eds)
+
+### ViPE Mode (Standard)
+> ViPE SLAM → COLMAP format → Gaussian Splatting
+
+[![ViPE Results](https://img.youtube.com/vi/ZvPsXBV6758/0.jpg)](https://www.youtube.com/watch?v=ZvPsXBV6758)
+
+### ViPE Mode (Optimized)
+> Trajectory generated on 1/4 frames, Gaussian Splatting trained on 1/2 frames
+
+[![ViPE Optimized](https://img.youtube.com/vi/fHLGGDVGzsc/0.jpg)](https://www.youtube.com/watch?v=fHLGGDVGzsc)
+
 ## ⚙️ Requirements
 
 - Conda
