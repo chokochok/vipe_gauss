@@ -31,6 +31,7 @@ if conda env list | grep -q "^vipe "; then
     echo "ViPE environment already exists, skipping..."
 else
     conda env create -f envs/base.yml
+    conda run -n vipe conda install -c "nvidia/label/cuda-12.8.0" cuda-toolkit -y
     conda run -n vipe pip install -r envs/requirements.txt --extra-index-url https://download.pytorch.org/whl/cu128
     conda run -n vipe pip install --no-build-isolation -e .
 fi
