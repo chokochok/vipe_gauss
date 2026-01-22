@@ -32,8 +32,7 @@ def main():
     parser.add_argument("input_dir", help="Path to input images directory")
     parser.add_argument("output_dir", help="Path to output directory")
     parser.add_argument("--mode", choices=["vipe", "colmap"], default="vipe", help="Pipeline mode")
-    parser.add_argument("--scale", type=int, default=4, choices=[1,2,4,8], help="Image scale")
-    parser.add_argument("--gsplat-factor", type=int, default=1, help="GSplat data factor")
+    parser.add_argument("--max-size", type=str, default=None, help="Max size: single int for longest side (e.g., 640) or WIDTHxHEIGHT (e.g., 640x480)")
     
     args = parser.parse_args()
     
@@ -51,24 +50,27 @@ def main():
     print(f"Pipeline Mode: {args.mode.upper()} → GSplat")
     print(f"Input: {input_dir}")
     print(f"Output: {output_dir}")
-    print(f"Scale: {args.scale}")
+    if args.max_size:
+        print(f"Max Size: {args.max_size}")
     print(f"{'='*80}\n")
     
     # Step 1: Prepare dataset
     print("\n[STEP 1] Preparing dataset...")
-    run_cmd([
+    prepare_cmd = [
         "python", str(scripts_dir / "prepare_dataset.py"),
         "--input", str(input_dir),
         "--output", str(processed_dir),
-        "--scales", "1", "2", "4", "8",
         "--enforce-even"
-    ], conda_env="vipe")
+    ]
+    if args.max_size:
+        prepare_cmd.extend(["--max-size", str(args.max_size)])
+    run_cmd(prepare_cmd, conda_env="vipe")
     
-    images_dir = processed_dir / f"images_{args.scale}"
+    images_dir = processed_dir / "images"
     
     if args.mode == "vipe":
         # ViPE pipeline
-        vipe_output = output_dir / f"vipe_scale_{args.scale}"
+        vipe_output = output_dir / "vipe_output"
         vipe_output.mkdir(exist_ok=True)
         
         # Step 2: ViPE SLAM
@@ -86,7 +88,7 @@ def main():
         
         # Step 3: Convert to COLMAP
         print("\n[STEP 3] Converting ViPE to COLMAP...")
-        colmap_dir = output_dir / f"vipe_colmap_scale_{args.scale}"
+        colmap_dir = output_dir / "vipe_colmap"
         run_cmd([
             "python", str(scripts_dir / "vipe_slam_to_colmap.py"),
             str(vipe_output),
@@ -95,11 +97,11 @@ def main():
             "--point-subsample", "1"
         ], conda_env="vipe")
         
-        gsplat_output = output_dir / f"vipe_gsplat_scale_{args.scale}"
+        gsplat_output = output_dir / "vipe_gsplat"
         
     else:
         # COLMAP pipeline
-        colmap_dir = output_dir / f"colmap_scale_{args.scale}"
+        colmap_dir = output_dir / "colmap_output"
         colmap_dir.mkdir(exist_ok=True)
         
         # Copy images
@@ -119,7 +121,7 @@ def main():
             "--resize"
         ], conda_env="colmap")
         
-        gsplat_output = output_dir / f"colmap_gsplat_scale_{args.scale}"
+        gsplat_output = output_dir / "colmap_gsplat"
     
     # Find COLMAP data directory
     if not (colmap_dir / "images").exists():
@@ -134,7 +136,7 @@ def main():
         "default",
         "--data_dir", str(colmap_dir),
         "--result_dir", str(gsplat_output),
-        "--data_factor", str(args.gsplat_factor),
+        "--data_factor", "1",
         "--save_ply"
     ], conda_env="gsplat", env_vars={"CUDA_VISIBLE_DEVICES": "0"})
     

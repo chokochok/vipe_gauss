@@ -29,8 +29,9 @@ python pipeline.py /path/to/images /path/to/output
 # COLMAP mode
 python pipeline.py /path/to/images /path/to/output --mode colmap
 
-# With parameters
-python pipeline.py /path/to/images /path/to/output --mode vipe --scale 4 --gsplat-factor 1
+# With max size limit
+python pipeline.py /path/to/images /path/to/output --max-size 640
+python pipeline.py /path/to/images /path/to/output --max-size 1920x1080
 ```
 
 ## 📝 Parameters
@@ -44,8 +45,9 @@ Arguments:
 
 Options:
   --mode {vipe,colmap}    Pipeline mode (default: vipe)
-  --scale {1,2,4,8}       Processing scale (default: 4)
-  --gsplat-factor N       Data factor for GSplat (default: 1)
+  --max-size SIZE         Max resolution: single int for longest side (e.g., 640)
+                          or WIDTHxHEIGHT (e.g., 640x480). Optional.
+                          Paper uses: 640x480
 ```
 
 ## 📁 Results Structure
@@ -54,37 +56,40 @@ Options:
 ```
 output_dir/
 ├── processed/
-│   └── images_4/
-├── vipe_scale_4/           # ViPE SLAM results
-├── vipe_colmap_scale_4/    # Converted to COLMAP
-└── vipe_gsplat_scale_4/    # Gaussian Splatting
-    └── point_cloud.ply     # 🎯 Result
+│   └── images/                # Processed images
+├── vipe_output/               # ViPE SLAM results
+├── vipe_colmap/               # Converted to COLMAP
+└── vipe_gsplat/               # Gaussian Splatting
+    └── point_cloud.ply        # 🎯 Result
 ```
 
 ### COLMAP mode:
 ```
 output_dir/
 ├── processed/
-│   └── images_4/
-├── colmap_scale_4/         # COLMAP reconstruction
-└── colmap_gsplat_scale_4/  # Gaussian Splatting
-    └── point_cloud.ply     # 🎯 Result
+│   └── images/                # Processed images
+├── colmap_output/             # COLMAP reconstruction
+└── colmap_gsplat/             # Gaussian Splatting
+    └── point_cloud.ply        # 🎯 Result
 ```
 
 ## 💡 Examples
 
 ```bash
-# Quick test (scale 8)
-python pipeline.py data/input/test_images output/test1 --scale 8
+# Paper resolution (640x480)
+python pipeline.py data/input/test_images output/test1 --max-size 640x480
 
-# ViPE, standard quality
-python pipeline.py ~/data/zavod70 output/vipe_run --mode vipe --scale 4
+# Resize to 640px on longest side
+python pipeline.py data/input/test_images output/test2 --max-size 640
 
-# COLMAP, high quality
-python pipeline.py ~/data/zavod70 output/colmap_run --mode colmap --scale 2
+# ViPE mode with paper resolution
+python pipeline.py ~/data/zavod70 output/vipe_run --mode vipe --max-size 640x480
 
-# Quick GSplat (data_factor=4)
-python pipeline.py ~/data/zavod70 output/quick --scale 8 --gsplat-factor 4
+# COLMAP mode with high resolution
+python pipeline.py ~/data/zavod70 output/colmap_run --mode colmap --max-size 1280x960
+
+# Quick test with low resolution
+python pipeline.py ~/data/zavod70 output/quick --max-size 480
 ```
 
 ## 🔍 Two Modes
