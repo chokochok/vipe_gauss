@@ -7,7 +7,7 @@ Two simple files for complete pipeline: ViPE or COLMAP → GSplat
 - `setup_environments.sh` - creates all conda environments
 - `pipeline.py` - runs the full pipeline
 
-## 🚀 Usage
+## 🚀 Quick Start
 
 ### 1. Create environments (one time)
 
@@ -20,34 +20,45 @@ This will create 3 conda environments:
 - `colmap` - for COLMAP
 - `gsplat` - for Gaussian Splatting
 
-### 2. Run pipeline
+### 2. Run test example
 
 ```bash
-# ViPE mode (default)
-python pipeline.py /path/to/images /path/to/output
+# Process test video with frame skip
+python pipeline.py data/input/dog-example.mp4 output/dog_test --frame-skip 2
 
-# COLMAP mode
-python pipeline.py /path/to/images /path/to/output --mode colmap
+# Process test video with max size and frame skip
+python pipeline.py data/input/dog-example.mp4 output/dog_test --max-size 640 --frame-skip 3
+```
 
-# With max size limit
-python pipeline.py /path/to/images /path/to/output --max-size 640
-python pipeline.py /path/to/images /path/to/output --max-size 1920x1080
+### 3. Run on your data
+
+```bash
+# From video file
+python pipeline.py /path/to/video.mp4 /path/to/output
+
+# From image directory
+python pipeline.py /path/to/images/ /path/to/output
+
+# With COLMAP mode
+python pipeline.py /path/to/video.mp4 /path/to/output --mode colmap
 ```
 
 ## 📝 Parameters
 
 ```
-pipeline.py INPUT_DIR OUTPUT_DIR [OPTIONS]
+pipeline.py INPUT OUTPUT [OPTIONS]
 
 Arguments:
-  INPUT_DIR                Directory with input images
-  OUTPUT_DIR              Directory for results
+  INPUT                   Path to input video file or images directory
+  OUTPUT                  Directory for results
 
 Options:
   --mode {vipe,colmap}    Pipeline mode (default: vipe)
   --max-size SIZE         Max resolution: single int for longest side (e.g., 640)
                           or WIDTHxHEIGHT (e.g., 640x480). Optional.
                           Paper uses: 640x480
+  --frame-skip N          Process every Nth frame (default: 1 = all frames)
+                          Use 2-5 to speed up processing
 ```
 
 ## 📁 Results Structure
@@ -76,20 +87,26 @@ output_dir/
 ## 💡 Examples
 
 ```bash
-# Paper resolution (640x480)
-python pipeline.py data/input/test_images output/test1 --max-size 640x480
+# Test example with dog video
+python pipeline.py data/input/dog-example.mp4 output/dog_test --frame-skip 2
 
-# Resize to 640px on longest side
-python pipeline.py data/input/test_images output/test2 --max-size 640
+# Test with paper resolution
+python pipeline.py data/input/dog-example.mp4 output/dog_640 --max-size 640x480 --frame-skip 3
 
-# ViPE mode with paper resolution
-python pipeline.py ~/data/zavod70 output/vipe_run --mode vipe --max-size 640x480
+# Video with frame skip (faster processing)
+python pipeline.py video.mp4 output/fast --frame-skip 5
+
+# Video with max size and frame skip
+python pipeline.py video.mp4 output/result --max-size 640 --frame-skip 2
+
+# Image directory with ViPE mode
+python pipeline.py ~/data/images/ output/vipe_run --mode vipe --max-size 640x480
 
 # COLMAP mode with high resolution
-python pipeline.py ~/data/zavod70 output/colmap_run --mode colmap --max-size 1280x960
+python pipeline.py video.mp4 output/colmap_run --mode colmap --max-size 1280x960
 
 # Quick test with low resolution
-python pipeline.py ~/data/zavod70 output/quick --max-size 480
+python pipeline.py video.mp4 output/quick --max-size 480 --frame-skip 4
 ```
 
 ## 🔍 Two Modes
