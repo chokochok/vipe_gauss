@@ -34,6 +34,7 @@ def main():
     parser.add_argument("--mode", choices=["vipe", "colmap"], default="vipe", help="Pipeline mode")
     parser.add_argument("--max-size", type=str, default=None, help="Max size: single int for longest side (e.g., 640) or WIDTHxHEIGHT (e.g., 640x480)")
     parser.add_argument("--frame-skip", type=int, default=1, help="Process every Nth frame. Default: 1 (all frames)")
+    parser.add_argument("--optimized-trajectory", action="store_true", help="Use optimized ViPE config with denser keyframes for better camera pose preservation (ViPE mode only)")
     
     args = parser.parse_args()
     
@@ -60,6 +61,8 @@ def main():
         print(f"Max Size: {args.max_size}")
     if args.frame_skip > 1:
         print(f"Frame Skip: {args.frame_skip}")
+    if args.optimized_trajectory:
+        print("Trajectory Mode: Optimized (denser keyframes)")
     print(f"{'='*80}\n")
     
     # Step 1: Prepare dataset
@@ -85,7 +88,7 @@ def main():
         
         # Step 2: ViPE SLAM
         print("\n[STEP 2] Running ViPE SLAM...")
-        run_cmd([
+        vipe_cmd = [
             "python", str(external_dir / "vipe" / "run.py"),
             "pipeline=default",
             "streams=frame_dir_stream",
@@ -94,7 +97,34 @@ def main():
             "pipeline.output.save_slam_map=true",
             "pipeline.output.save_viz=true",
             f"pipeline.output.path={vipe_output}"
-        ], conda_env="vipe")
+        ]
+        
+        # Add optimized trajectory parameters via Hydra overrides
+        if args.optimized_trajectory:
+            vipe_cmd.extend([
+                # More keyframes for better tracking
+                "pipeline.init.instance.kf_gap_sec=0.5",      # was 2.0 - more frequent in time
+                "pipeline.slam.keyframe_thresh=2.5",          # was 4.0 - easier to create
+                "pipeline.slam.filter_thresh=1.5",            # was 2.4 - more sensitive to motion
+                
+                # More connections between frames (prevent tracking loss)
+                "pipeline.slam.frontend_window=35",           # was 25 - larger optimization window
+                "pipeline.slam.frontend_radius=3",            # was 2 - forced connections with more neighbors
+                "pipeline.slam.frontend_thresh=20.0",         # was 16.0 - add connections at greater distances
+                "pipeline.slam.frontend_nms=0",               # was 1 - disable NMS to keep all edges
+                
+                # Backend optimization (prevent camera teleportation)
+                "pipeline.slam.backend_iters=32",             # was 24 - more backend iterations
+                "pipeline.slam.backend_thresh=28.0",          # was 22.0 - include more frames in backend
+                "pipeline.slam.backend_radius=3",             # was 2 - more forced backend connections
+                "pipeline.slam.backend_nms=2",                # was 3 - allow more backend edges
+                
+                # Better initialization and cross-view matching
+                "pipeline.slam.warmup=12",                    # was 8 - better initialization
+                "pipeline.slam.adaptive_cross_view=true"      # was false - recompute cross-view in backend
+            ])
+        
+        run_cmd(vipe_cmd, conda_env="vipe")
         
         # Step 3: Convert to COLMAP
         print("\n[STEP 3] Converting ViPE to COLMAP...")

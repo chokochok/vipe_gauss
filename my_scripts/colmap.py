@@ -40,7 +40,7 @@ def run_colmap(source_path: Path, matcher_type: str):
     sparse_path.mkdir(parents=True, exist_ok=True)
 
     # 1. Feature Extraction
-    print(f"\n🚀 [1/3] Feature Extraction...")
+    print("\n🚀 [1/3] Feature Extraction...")
     
     # Визначаємо правильний клас опцій
     if hasattr(pycolmap, 'FeatureExtractionOptions'):
@@ -81,7 +81,7 @@ def run_colmap(source_path: Path, matcher_type: str):
         pycolmap.match_exhaustive(str(database_path))
 
     # 3. Mapping
-    print(f"\n🏗️  [3/3] Reconstruction (Mapping)...")
+    print("\n🏗️  [3/3] Reconstruction (Mapping)...")
     
     maps = pycolmap.incremental_mapping(str(database_path), str(images_dir), str(sparse_path))
 
