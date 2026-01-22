@@ -36,8 +36,8 @@ def resize_images_in_folder(source_path: Path):
 def run_colmap(source_path: Path, matcher_type: str):
     images_dir = source_path / "images"
     database_path = source_path / "database.db"
-    output_path = source_path / "sparse" / "0"
-    output_path.mkdir(parents=True, exist_ok=True)
+    sparse_path = source_path / "sparse"
+    sparse_path.mkdir(parents=True, exist_ok=True)
 
     # 1. Feature Extraction
     print(f"\n🚀 [1/3] Feature Extraction...")
@@ -83,7 +83,7 @@ def run_colmap(source_path: Path, matcher_type: str):
     # 3. Mapping
     print(f"\n🏗️  [3/3] Reconstruction (Mapping)...")
     
-    maps = pycolmap.incremental_mapping(str(database_path), str(images_dir), str(output_path))
+    maps = pycolmap.incremental_mapping(str(database_path), str(images_dir), str(sparse_path))
 
     if not maps:
         print("❌ Error: Failed to create a 3D model.")
