@@ -29,10 +29,11 @@ def run_cmd(cmd, conda_env=None, env_vars=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Pipeline: (ViPE or COLMAP) → GSplat")
-    parser.add_argument("input_dir", help="Path to input images directory")
+    parser.add_argument("input_dir", help="Path to input video file or images directory")
     parser.add_argument("output_dir", help="Path to output directory")
     parser.add_argument("--mode", choices=["vipe", "colmap"], default="vipe", help="Pipeline mode")
     parser.add_argument("--max-size", type=str, default=None, help="Max size: single int for longest side (e.g., 640) or WIDTHxHEIGHT (e.g., 640x480)")
+    parser.add_argument("--frame-skip", type=int, default=1, help="Process every Nth frame. Default: 1 (all frames)")
     
     args = parser.parse_args()
     
@@ -46,12 +47,19 @@ def main():
     
     processed_dir = output_dir / "processed"
     
+    # Detect if input is video or directory
+    is_video = input_dir.is_file() and input_dir.suffix.lower() in ['.mp4', '.avi', '.mov', '.mkv', '.m4v', '.webm']
+    input_type = "Video" if is_video else "Image Directory"
+    
     print(f"\n{'='*80}")
     print(f"Pipeline Mode: {args.mode.upper()} → GSplat")
+    print(f"Input Type: {input_type}")
     print(f"Input: {input_dir}")
     print(f"Output: {output_dir}")
     if args.max_size:
         print(f"Max Size: {args.max_size}")
+    if args.frame_skip > 1:
+        print(f"Frame Skip: {args.frame_skip}")
     print(f"{'='*80}\n")
     
     # Step 1: Prepare dataset
@@ -64,6 +72,8 @@ def main():
     ]
     if args.max_size:
         prepare_cmd.extend(["--max-size", str(args.max_size)])
+    if args.frame_skip > 1:
+        prepare_cmd.extend(["--frame-skip", str(args.frame_skip)])
     run_cmd(prepare_cmd, conda_env="vipe")
     
     images_dir = processed_dir / "images"
