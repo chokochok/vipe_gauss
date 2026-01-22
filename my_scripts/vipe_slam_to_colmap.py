@@ -439,10 +439,10 @@ def convert_vipe_slam_to_colmap(
     logger.info(f"  X range: {cam_positions[:, 0].min():.2f} to {cam_positions[:, 0].max():.2f}")
     logger.info(f"  Y range: {cam_positions[:, 1].min():.2f} to {cam_positions[:, 1].max():.2f}")
     logger.info(f"  Z range: {cam_positions[:, 2].min():.2f} to {cam_positions[:, 2].max():.2f}")
-    logger.info(f"First 5 camera positions:")
+    logger.info("First 5 camera positions:")
     for i in range(min(5, len(cam_positions))):
         logger.info(f"  Cam {i}: [{cam_positions[i, 0]:.3f}, {cam_positions[i, 1]:.3f}, {cam_positions[i, 2]:.3f}]")
-    logger.info(f"Last 5 camera positions:")
+    logger.info("Last 5 camera positions:")
     for i in range(max(0, len(cam_positions) - 5), len(cam_positions)):
         logger.info(f"  Cam {i}: [{cam_positions[i, 0]:.3f}, {cam_positions[i, 1]:.3f}, {cam_positions[i, 2]:.3f}]")
     
@@ -482,7 +482,7 @@ def convert_vipe_slam_to_colmap(
     write_colmap_model(cameras, images, points3D, output_dir)
     
     logger.info(f"Conversion complete! Output: {output_dir}")
-    logger.info(f"  - sparse/0/: COLMAP model (txt + bin)")
+    logger.info("  - sparse/0/: COLMAP model (txt + bin)")
     logger.info(f"  - images/: Copied images ({width}x{height})")
 
 
