@@ -83,14 +83,13 @@ def run_colmap(source_path: Path, matcher_type: str):
     # 3. Mapping
     print(f"\n🏗️  [3/3] Reconstruction (Mapping)...")
     
-    maps = pycolmap.incremental_mapping(str(database_path), str(images_dir))
+    maps = pycolmap.incremental_mapping(str(database_path), str(images_dir), str(output_path))
 
     if not maps:
         print("❌ Error: Failed to create a 3D model.")
         return
 
     best_reconstruction = maps[0]
-    best_reconstruction.write(str(output_path))
     
     print("-" * 50)
     print(f"✅ Done! Results saved to: {source_path}")
