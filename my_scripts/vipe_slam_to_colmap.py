@@ -454,7 +454,7 @@ def convert_vipe_slam_to_colmap(
     slam_data = load_slam_map(slam_map_path)
     
     # Create output directory
-    output_dir = output_path / sequence_name
+    output_dir = output_path
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Copy images
