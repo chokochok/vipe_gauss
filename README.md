@@ -28,6 +28,9 @@ python pipeline.py data/input/dog-example.mp4 output/dog_test --frame-skip 2
 
 # Process test video with max size and frame skip
 python pipeline.py data/input/dog-example.mp4 output/dog_test --max-size 640 --frame-skip 3
+
+# Process using COLMAP
+python pipeline.py data/input/dog-example.mp4 output/dog_test_colmap --max-size 640 --frame-skip 3 --mode colmap
 ```
 
 ### 3. Run on your data
