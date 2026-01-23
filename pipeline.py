@@ -102,26 +102,30 @@ def main():
         # Add optimized trajectory parameters via Hydra overrides
         if args.optimized_trajectory:
             vipe_cmd.extend([
-                # More keyframes for better tracking
-                "pipeline.init.instance.kf_gap_sec=0.5",      # was 2.0 - more frequent in time
-                "pipeline.slam.keyframe_thresh=2.5",          # was 4.0 - easier to create
-                "pipeline.slam.filter_thresh=1.5",            # was 2.4 - more sensitive to motion
+                # Maximum keyframe density for best tracking
+                "pipeline.init.instance.kf_gap_sec=0.25",     # was 2.0 - very frequent keyframes
+                "pipeline.slam.keyframe_thresh=1.5",          # was 4.0 - very easy keyframe creation
+                "pipeline.slam.filter_thresh=1.0",            # was 2.4 - highly sensitive to motion
                 
-                # More connections between frames (prevent tracking loss)
-                "pipeline.slam.frontend_window=35",           # was 25 - larger optimization window
-                "pipeline.slam.frontend_radius=3",            # was 2 - forced connections with more neighbors
-                "pipeline.slam.frontend_thresh=20.0",         # was 16.0 - add connections at greater distances
-                "pipeline.slam.frontend_nms=0",               # was 1 - disable NMS to keep all edges
+                # Maximum frame connections (prevent tracking loss)
+                "pipeline.slam.frontend_window=50",           # was 25 - very large optimization window
+                "pipeline.slam.frontend_radius=4",            # was 2 - maximum neighbor connections
+                "pipeline.slam.frontend_thresh=25.0",         # was 16.0 - connect distant frames
+                "pipeline.slam.frontend_nms=0",               # was 1 - keep all edges (no NMS)
                 
-                # Backend optimization (prevent camera teleportation)
-                "pipeline.slam.backend_iters=32",             # was 24 - more backend iterations
-                "pipeline.slam.backend_thresh=28.0",          # was 22.0 - include more frames in backend
-                "pipeline.slam.backend_radius=3",             # was 2 - more forced backend connections
-                "pipeline.slam.backend_nms=2",                # was 3 - allow more backend edges
+                # Aggressive backend optimization (prevent drift)
+                "pipeline.slam.backend_iters=48",             # was 24 - maximum backend iterations
+                "pipeline.slam.backend_thresh=32.0",          # was 22.0 - very inclusive backend
+                "pipeline.slam.backend_radius=4",             # was 2 - maximum backend connections
+                "pipeline.slam.backend_nms=1",                # was 3 - more backend edges
                 
-                # Better initialization and cross-view matching
-                "pipeline.slam.warmup=12",                    # was 8 - better initialization
-                "pipeline.slam.adaptive_cross_view=true"      # was false - recompute cross-view in backend
+                # Extended initialization and cross-view matching
+                "pipeline.slam.warmup=16",                    # was 8 - extended initialization
+                "pipeline.slam.adaptive_cross_view=true",     # was false - recompute cross-view
+                
+                # Additional robustness parameters
+                "pipeline.slam.loop_closure=true",            # enable loop closure detection
+                "pipeline.slam.max_age=50",                   # keep points longer for stability
             ])
         
         run_cmd(vipe_cmd, conda_env="vipe")
