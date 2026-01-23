@@ -1,5 +1,6 @@
 # Ignore output and processed data
 output/
+results_gaus/
 data/processed/
 
 # Ignore large external repos (will be cloned in Docker)
