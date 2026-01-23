@@ -200,8 +200,6 @@ Images → ViPE SLAM (16 optimized parameters) → COLMAP format → GSplat
 **🎯 Advanced Features**:
 - `warmup`: 8 → **16** (2x better initialization before tracking starts)
 - `adaptive_cross_view`: false → **true** (dynamically recompute cross-view connections)
-- `loop_closure`: false → **true** (enable loop closure detection for drift correction)
-- `max_age`: default → **50** (keep map points longer for better stability)
 
 **Trade-offs**:
 - ✅ **Maximum tracking stability** (minimal tracking failures)

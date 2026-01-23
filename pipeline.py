@@ -122,10 +122,6 @@ def main():
                 # Extended initialization and cross-view matching
                 "pipeline.slam.warmup=16",                    # was 8 - extended initialization
                 "pipeline.slam.adaptive_cross_view=true",     # was false - recompute cross-view
-                
-                # Additional robustness parameters
-                "pipeline.slam.loop_closure=true",            # enable loop closure detection
-                "pipeline.slam.max_age=50",                   # keep points longer for stability
             ])
         
         run_cmd(vipe_cmd, conda_env="vipe")
